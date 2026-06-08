@@ -71,6 +71,99 @@ def create_radio_by_category(items_dict, session_key, label_text):
     st.session_state[session_key] = selected
     return selected
 
+def create_grouped_radio_by_category(items_dict, session_key, label_text):
+    """
+    Menampilkan dua-langkah grouped selector:
+    1) Pilih kategori (bidang)
+    2) Pilih opsi spesifik dalam kategori tersebut
+
+    Ini membuat tampilan seperti "section" untuk setiap kategori.
+    """
+    # Susun kategori berdasarkan urutan kemunculan pada items_dict
+    categories = []
+    for k, v in items_dict.items():
+        if v not in categories:
+            categories.append(v)
+
+    # Tentukan kategori awal berdasarkan nilai yang tersimpan
+    current_value = st.session_state.get(session_key, '')
+    initial_category = None
+    if current_value:
+        initial_category = items_dict.get(current_value)
+    if initial_category not in categories:
+        initial_category = categories[0] if categories else None
+
+    # Pilih kategori
+    selected_category = st.selectbox("Pilih Bidang (Kategori):", categories, index=categories.index(initial_category) if initial_category in categories else 0, format_func=lambda x: x)
+
+    # Kumpulkan opsi untuk kategori yang dipilih
+    options = [k for k, v in items_dict.items() if v == selected_category]
+    # Tentukan index awal untuk opsi jika sebelumnya sudah memilih
+    index = 0
+    if current_value in options:
+        index = options.index(current_value)
+
+    selected = st.radio(label_text, options, index=index, format_func=lambda x: x.title())
+    st.session_state[session_key] = selected
+    return selected
+
+def create_minat_accordion(items_dict, session_key, label_text):
+    """
+    Menampilkan setiap kategori minat sebagai accordion (expander) terpisah.
+    Di dalam setiap accordion, opsi kategori ditampilkan sebagai tombol,
+    sehingga hanya satu nilai global disimpan di session state.
+    """
+    st.write(f"**{label_text}**")
+
+    categories = []
+    cat_items = {}
+    for opt, cat in items_dict.items():
+        if cat not in cat_items:
+            cat_items[cat] = []
+            categories.append(cat)
+        cat_items[cat].append(opt)
+
+    current_value = st.session_state.get(session_key, "")
+
+    for cat in categories:
+        expanded = current_value in cat_items[cat]
+        with st.expander(cat.upper(), expanded=expanded):
+            cols = st.columns(2)
+            for i, opt in enumerate(cat_items[cat]):
+                col = cols[i % 2]
+                label = opt.title()
+                if current_value == opt:
+                    label = f"{label} ✅"
+                if col.button(label, key=f"{session_key}_{cat}_{opt}"):
+                    st.session_state[session_key] = opt
+
+    return st.session_state.get(session_key, "")
+
+def create_grouped_buttons_with_headers(items_dict, session_key, label_text):
+    """
+    Tampilkan semua opsi dengan header kategori (kapital) di atasnya.
+    Opsi ditampilkan sebagai tombol; tombol bukan bagian dari radio,
+    jadi klik tombol akan langsung menyimpan pilihan ke session state.
+    """
+    # Bangun map kategori -> list opsi
+    cat_items = {}
+    for opt, cat in items_dict.items():
+        cat_items.setdefault(cat, []).append(opt)
+
+    st.write(f"**{label_text}**")
+    for cat, items in cat_items.items():
+        st.markdown(f"**{cat.upper()}**")
+        # Tampilkan opsi sebagai tombol dalam dua kolom
+        cols = st.columns(2)
+        for i, opt in enumerate(items):
+            col = cols[i % 2]
+            label = opt.title()
+            if st.session_state.get(session_key) == opt:
+                label = f"{label} ✅"
+            if col.button(label, key=f"{session_key}_btn_{opt}"):
+                st.session_state[session_key] = opt
+                # UI akan rerun otomatis di Streamlit setelah klik tombol
+
 def simpan_checkbox_dan_lanjut(target_page, items_dict, session_key):
     """
     Fungsi ini akan menangkap semua checkbox yang dicentang sebelum pindah halaman,
@@ -239,12 +332,13 @@ elif st.session_state.page == 'q1':
     st.progress(20)
     st.caption("Pertanyaan 1 dari 5 (Fitur Utama)")
     st.subheader("Bidang apa yang paling membuatmu tertarik dan antusias?")
-    with st.form("form_q1"):
-        create_radio_by_category(minat_dict, 'minat', "Pilih minat terbesarmu:")
-        submitted_q1 = st.form_submit_button("Selanjutnya ➡️")
-    if submitted_q1:
-        set_page('q2')
-        st.rerun()
+    create_minat_accordion(minat_dict, 'minat', "Pilih minat terbesarmu:")
+    if st.button("Selanjutnya ➡️"):
+        if not st.session_state.get('minat'):
+            st.error("⚠️ Pilih salah satu minat sebelum melanjutkan!")
+        else:
+            set_page('q2')
+            st.rerun()
     if st.button("⬅️ Kembali"):
         set_page('home')
         st.rerun()
