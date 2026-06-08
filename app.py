@@ -95,6 +95,30 @@ def get_selected_checkboxes(items_dict, session_key):
             selected.append(option)
     return selected
 
+
+def get_jurusan_populer_text(bidang):
+    if bidang == "Komputer dan Teknologi":
+        return "Teknik Informatika<br>Sistem Informasi<br>Ilmu Komputer<br>Teknologi Informasi<br>Sistem Komputer"
+    elif bidang == "Teknik":
+        return "Teknik Industri<br>Teknik Sipil<br>Teknik Mesin<br>Teknik Elektro<br>Teknik Kimia"
+    elif bidang == "Kesehatan":
+        return "Kedokteran<br>Keperawatan<br>Farmasi<br>Kesehatan Masyarakat<br>Gizi"
+    elif bidang == "Ekonomi dan Bisnis":
+        return "Akuntansi<br>Manajemen<br>Bisnis Digital<br>Kewirausahaan<br>Ekonomi Pembangunan<br>"
+    elif bidang == "Pendidikan":
+        return "PGSD<br>PGPAUD<br>Pendidikan Bahasa Inggris<br>Pendidikan Matematika<br>Pendidikan Bahasa Indonesia"
+    elif bidang == "Seni":
+        return "DKV<br>Seni Rupa<br>Desain Produk<br>Film<br>Fotografi"
+    elif bidang == "Sosial dan Humaniora":
+        return "Hukum<br>Psikologi<br>Ilmu Komunikasi<br>Hubungan Internasional<br>Administrasi Publik"
+    elif bidang == "Pertanian":
+        return "Agribisnis<br>Agroteknologi<br>Teknologi Pangan<br>Peternakan<br>Kehutanan"
+    elif bidang == "Sains dan MIPA":
+        return "Matematika<br>Statistika<br>Fisika<br>Kimia<br>Biologi"
+    else:
+        return "Agribisnis<br>Agroteknologi<br>Teknologi Pangan<br>Peternakan<br>Kehutanan"
+
+
 def create_checkbox_group(items_dict, session_key, label_text):
     """
     Menampilkan deretan checkbox dalam bentuk 2 kolom agar rapi dan ringkas.
@@ -419,6 +443,19 @@ elif st.session_state.page == 'result':
         st.success(f"🥇 **{top_3[0][0]}** — {round((top_3[0][1]/total_skor)*100, 2)}%")
         st.info(f"🥈 **{top_3[1][0]}** — {round((top_3[1][1]/total_skor)*100, 2)}%")
         st.warning(f"🥉 **{top_3[2][0]}** — {round((top_3[2][1]/total_skor)*100, 2)}%")
+        
+        st.markdown("---")
+        st.subheader("Jurusan Populer untuk Setiap Rekomendasi")
+        col1, col2, col3 = st.columns(3)
+        desc1 = get_jurusan_populer_text(top_3[0][0])
+        desc2 = get_jurusan_populer_text(top_3[1][0])
+        desc3 = get_jurusan_populer_text(top_3[2][0])
+        col1.markdown(f"**{top_3[0][0]}**")
+        col1.markdown(desc1, unsafe_allow_html=True)
+        col2.markdown(f"**{top_3[1][0]}**")
+        col2.markdown(desc2, unsafe_allow_html=True)
+        col3.markdown(f"**{top_3[2][0]}**")
+        col3.markdown(desc3, unsafe_allow_html=True)
         
         st.write("### Apa langkah selanjutnya?")
         st.write(f"Bidang utama yang paling direkomendasikan adalah **{top_3[0][0]}**, namun kamu juga memiliki potensi kuat di **{top_3[1][0]}** dan **{top_3[2][0]}**. Cobalah mencari tahu lebih dalam tentang program studi atau profesi di ketiga bidang ini. Jangan ragu untuk mendiskusikannya dengan guru BK atau orang tuamu untuk memantapkan pilihan!")
