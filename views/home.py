@@ -194,11 +194,17 @@ def show_home():
         </div>
     """, unsafe_allow_html=True)
     
-    # Render Tombol Navigasi
+   # Render Tombol Navigasi
     _, col_btn, _ = st.columns([1.2, 1.6, 1.2])
     with col_btn:
         if st.button("Start Your Journey", use_container_width=True):
+            # 1. Ubah rute halaman ke 'question'
             st.session_state.page = 'question'
+            
+            # 2. [TAMBAHAN PENTING] Reset current_step ke 1 agar selalu mulai dari awal
+            st.session_state.current_step = 1
+            
+            # 3. Refresh layar
             st.rerun()
 
     st.write("<br>", unsafe_allow_html=True)

@@ -1,165 +1,110 @@
 ﻿import streamlit as st
-
+from views.kamus import (jurusan_dict, ekskul_dict, personality_dict, hobi_dict,
+                         get_jurusan_populer_text)
 
 def show_result():
+    model = st.session_state.get('model')
+    tfidf = st.session_state.get('tfidf')
+    le = st.session_state.get('le')
+
+    minat = st.session_state.get('minat', '')
+    hard_skill_list = st.session_state.get('hard_skill', [])
+    soft_skill_list = st.session_state.get('soft_skill', [])
+    mapel = st.session_state.get('mapel', '')
+    
+    if minat == '' or len(hard_skill_list) == 0:
+        st.warning("Sepertinya kamu belum menyelesaikan tes! Yuk, mulai dari awal.")
+        if st.button("Kembali ke Beranda"):
+            st.session_state.page = 'home'
+            st.rerun()
+        return
+
+    # --- A. PREDIKSI ML ---
+    hard_skill_str = " ".join(hard_skill_list)
+    soft_skill_str = " ".join(soft_skill_list)
+    teks_gabungan = f"{minat} {hard_skill_str} {soft_skill_str} {mapel}"
+    
+    input_tfidf = tfidf.transform([teks_gabungan])
+    prediksi_ml = model.predict(input_tfidf)
+    prediksi_rf = str(le.inverse_transform(prediksi_ml)[0])
+
+    # --- B. PERHITUNGAN SKOR PENDUKUNG ---
+    skor = {
+        "Komputer dan Teknologi": 0, "Teknik": 0, "Kesehatan": 0,
+        "Ekonomi dan Bisnis": 0, "Pendidikan": 0, "Seni": 0,
+        "Sosial dan Humaniora": 0, "Pertanian": 0, "Sains dan MIPA": 0
+    }
+    
+    if prediksi_rf in skor:
+        skor[prediksi_rf] += 20
+        
+    for bidang in jurusan_dict.get(st.session_state.get('jurusan_sekolah'), []):
+        skor[bidang] += 15
+    for bidang in hobi_dict.get(st.session_state.get('hobi'), []):
+        skor[bidang] += 10
+    for bidang in ekskul_dict.get(st.session_state.get('ekskul'), []):
+        skor[bidang] += 5
+    for bidang in personality_dict.get(st.session_state.get('personality'), []):
+        skor[bidang] += 10
+
+    # --- C. HASIL AKHIR (Top 3) ---
+    ranking = sorted(skor.items(), key=lambda x: x[1], reverse=True)
+    total_skor = sum(skor.values()) if sum(skor.values()) > 0 else 1 
+    top_3 = ranking[:3]
+
+    # --- D. TAMPILAN UI ---
     st.markdown("""
         <style>
-        .stAppViewMain {
-            background-color: #EEF2FF !important;
-        }
-        .result-screen {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 34px 16px 40px 16px;
-        }
-        .result-card {
-            background-color: #FFFFFF !important;
-            border-radius: 28px !important;
-            padding: 40px 40px 32px 40px !important;
-            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08) !important;
-            border: 1px solid rgba(99, 102, 241, 0.12) !important;
-            margin-bottom: 28px;
-        }
-        .result-badge {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: linear-gradient(180deg, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 0.04));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px auto;
-            font-size: 28px;
-        }
-        .result-title {
-            text-align: center;
-            color: #0F172A;
-            font-size: 30px;
-            font-weight: 800;
-            margin-bottom: 12px;
-        }
-        .result-subtitle {
-            text-align: center;
-            color: #64748B;
-            font-size: 15px;
-            margin-bottom: 24px;
-            line-height: 1.7;
-        }
-        .highlight-card {
-            background-color: #F8FAFC;
-            border-radius: 22px;
-            padding: 22px;
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
-            margin-bottom: 24px;
-        }
-        .highlight-card h3 {
-            margin: 0 0 8px 0;
-            color: #4F46E5;
-            font-size: 22px;
-            font-weight: 800;
-        }
-        .highlight-card p {
-            margin: 0;
-            color: #475569;
-            line-height: 1.7;
-            font-size: 14px;
-        }
-        .mini-card {
-            background-color: #FFFFFF;
-            border-radius: 22px;
-            padding: 24px;
-            border: 1px solid #F1F5F9;
-            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
-            min-height: 240px;
-        }
-        .mini-card h4 {
-            margin-bottom: 16px;
-            color: #0F172A;
-            font-size: 18px;
-            font-weight: 800;
-        }
-        .mini-card li {
-            margin-bottom: 10px;
-            color: #475569;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-        .restart-button {
-            max-width: 240px;
-            margin: 24px auto 0 auto;
-        }
-        .stButton > button {
-            background-color: #7C3AED !important;
-            color: #FFFFFF !important;
-            border-radius: 999px !important;
-            border: none !important;
-            font-weight: 700 !important;
-            font-size: 14px !important;
-            padding: 0.8rem 1.6rem !important;
-            min-height: 48px !important;
-            width: 100% !important;
-        }
-        .stButton > button:hover {
-            background-color: #6D28D9 !important;
-        }
-        @media (max-width: 768px) {
-            .result-card { padding: 28px 24px 26px 24px !important; }
-        }
+        .result-screen { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .result-card { background-color: #FFFFFF; border-radius: 28px; padding: 40px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08); text-align: center; margin-bottom: 24px; }
+        .badge-1 { font-size: 40px; margin-bottom: 10px; }
+        .top-1 { color: #4F46E5; font-size: 28px; font-weight: 800; margin-bottom: 5px; }
+        .mini-card { background-color: #F8FAFC; border-radius: 22px; padding: 20px; text-align: center; border: 1px solid #E2E8F0; }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
+    pct_1 = round((top_3[0][1]/total_skor)*100, 2)
+    pct_2 = round((top_3[1][1]/total_skor)*100, 2)
+    pct_3 = round((top_3[2][1]/total_skor)*100, 2)
+
+    st.markdown(f"""
         <div class="result-screen">
             <div class="result-card">
-                <div class="result-badge">✨</div>
-                <div class="result-title">Hasil Rekomendasimu</div>
-                <div class="result-subtitle">Berdasarkan profil unikmu, inilah rekomendasi jurusan dan jalur karier yang cocok untukmu.</div>
+                <div class="badge-1">🏆</div>
+                <div style="color: #64748B; font-size: 16px;">Rekomendasi Utama Kamu</div>
+                <div class="top-1">{top_3[0][0]}</div>
+                <div style="font-size: 18px; font-weight: bold; color: #10B981;">Kecocokan: {pct_1}%</div>
             </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-        <div class="highlight-card">
-            <h3>Sarjana Ilmu Komputer</h3>
-            <p>Fokus pada analisis data, pengembangan perangkat lunak, algoritma, dan pemrograman sistem untuk menciptakan solusi inovatif.</p>
         </div>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2, gap='large')
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("""
+        st.markdown(f"""
             <div class="mini-card">
-                <h4>Potensi Jalur Karier</h4>
-                <ul>
-                    <li>Software Engineer</li>
-                    <li>Data Scientist</li>
-                    <li>Artificial Intelligence Engineer</li>
-                </ul>
+                <div style="font-size: 24px;">🥈</div>
+                <h4 style="margin: 10px 0; color: #334155;">{top_3[1][0]}</h4>
+                <div style="color: #64748B;">Kecocokan: {pct_2}%</div>
             </div>
         """, unsafe_allow_html=True)
     with col2:
-        st.markdown("""
+        st.markdown(f"""
             <div class="mini-card">
-                <h4>Keahlian yang Dikuasai</h4>
-                <ul>
-                    <li>Pemrograman & Algoritma</li>
-                    <li>Manajemen Basis Data</li>
-                    <li>Machine Learning</li>
-                </ul>
+                <div style="font-size: 24px;">🥉</div>
+                <h4 style="margin: 10px 0; color: #334155;">{top_3[2][0]}</h4>
+                <div style="color: #64748B;">Kecocokan: {pct_3}%</div>
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("""
-            <div class="restart-button">
-    """, unsafe_allow_html=True)
+    st.write("<br>", unsafe_allow_html=True)
+    st.subheader("💡 Jurusan Populer di Bidang Tersebut")
+    st.info(f"**{top_3[0][0]}**: {get_jurusan_populer_text(top_3[0][0])}")
 
-    if st.button('🔄 Mulai Ulang', use_container_width=True):
+    st.write("<br>", unsafe_allow_html=True)
+    if st.button('🔄 Mulai Ulang Tes', use_container_width=True):
+        # Reset jawaban kuesioner ke default dari kamus
+        for key in ['minat', 'hard_skill', 'soft_skill', 'mapel', 'jurusan_sekolah', 'personality', 'hobi', 'ekskul']:
+            if key in st.session_state:
+                st.session_state[key] = '' if isinstance(st.session_state[key], str) else []
         st.session_state.page = 'home'
-        st.session_state.current_step = 1
-        st.session_state.answers = {}
         st.rerun()
-
-    st.markdown("""
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
