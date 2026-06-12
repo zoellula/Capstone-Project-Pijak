@@ -32,11 +32,11 @@ def load_models():
 model, tfidf, le = load_models()
 
 # Simpan model ke dalam brankas session_state agar bisa diakses oleh folder views
-if 'model' not in st.session_state:
+if 'model' not in st.session_state or st.session_state.get('model') is None:
     st.session_state.model = model
-if 'tfidf' not in st.session_state:
+if 'tfidf' not in st.session_state or st.session_state.get('tfidf') is None:
     st.session_state.tfidf = tfidf
-if 'le' not in st.session_state:
+if 'le' not in st.session_state or st.session_state.get('le') is None:
     st.session_state.le = le
 
 # Custom CSS global 

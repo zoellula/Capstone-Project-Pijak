@@ -10,8 +10,19 @@ def show_result():
     minat = st.session_state.get('minat', '')
     hard_skill_list = st.session_state.get('hard_skill', [])
     soft_skill_list = st.session_state.get('soft_skill', [])
-    mapel = st.session_state.get('mapel', '')
+    mapel_list = st.session_state.get('mapel', [])
+    if isinstance(mapel_list, str):
+        mapel_list = [mapel_list] if mapel_list else []
+    mapel = " ".join(mapel_list)
+
     
+    if model is None or tfidf is None or le is None:
+        st.error("Model prediksi belum dimuat. Silakan muat ulang halaman atau kembali ke beranda.")
+        if st.button("Kembali ke Beranda"):
+            st.session_state.page = 'home'
+            st.rerun()
+        return
+
     if minat == '' or len(hard_skill_list) == 0:
         st.warning("Sepertinya kamu belum menyelesaikan tes! Yuk, mulai dari awal.")
         if st.button("Kembali ke Beranda"):
@@ -38,14 +49,34 @@ def show_result():
     if prediksi_rf in skor:
         skor[prediksi_rf] += 20
         
-    for bidang in jurusan_dict.get(st.session_state.get('jurusan_sekolah'), []):
-        skor[bidang] += 15
-    for bidang in hobi_dict.get(st.session_state.get('hobi'), []):
-        skor[bidang] += 10
-    for bidang in ekskul_dict.get(st.session_state.get('ekskul'), []):
-        skor[bidang] += 5
-    for bidang in personality_dict.get(st.session_state.get('personality'), []):
-        skor[bidang] += 10
+    jurusan_selected = st.session_state.get('jurusan_sekolah', [])
+    if isinstance(jurusan_selected, str):
+        jurusan_selected = [jurusan_selected]
+    for opt in jurusan_selected:
+        for bidang in jurusan_dict.get(opt, []):
+            skor[bidang] += 15
+
+    hobi_selected = st.session_state.get('hobi', [])
+    if isinstance(hobi_selected, str):
+        hobi_selected = [hobi_selected]
+    for opt in hobi_selected:
+        for bidang in hobi_dict.get(opt, []):
+            skor[bidang] += 10
+
+    ekskul_selected = st.session_state.get('ekskul', [])
+    if isinstance(ekskul_selected, str):
+        ekskul_selected = [ekskul_selected]
+    for opt in ekskul_selected:
+        for bidang in ekskul_dict.get(opt, []):
+            skor[bidang] += 5
+
+    personality_selected = st.session_state.get('personality', [])
+    if isinstance(personality_selected, str):
+        personality_selected = [personality_selected]
+    for opt in personality_selected:
+        for bidang in personality_dict.get(opt, []):
+            skor[bidang] += 10
+
 
     # --- C. HASIL AKHIR (Top 3) ---
     ranking = sorted(skor.items(), key=lambda x: x[1], reverse=True)
@@ -101,10 +132,11 @@ def show_result():
     st.info(f"**{top_3[0][0]}**: {get_jurusan_populer_text(top_3[0][0])}")
 
     st.write("<br>", unsafe_allow_html=True)
-    if st.button('🔄 Mulai Ulang Tes', use_container_width=True):
+    if st.button('🔄 Cek Lagi dari Awal', use_container_width=True):
         # Reset jawaban kuesioner ke default dari kamus
         for key in ['minat', 'hard_skill', 'soft_skill', 'mapel', 'jurusan_sekolah', 'personality', 'hobi', 'ekskul']:
             if key in st.session_state:
                 st.session_state[key] = '' if isinstance(st.session_state[key], str) else []
-        st.session_state.page = 'home'
+        st.session_state.current_step = 1
+        st.session_state.page = 'question'
         st.rerun()

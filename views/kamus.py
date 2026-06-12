@@ -1,52 +1,138 @@
 import streamlit as st
 
-# ==========================================
-# FUNGSI HELPER UI
-# ==========================================
-def create_radio_by_category(items_dict, session_key, label_text):
+# === FUNGSI UI ====
+def create_checkbox_group_max3(items_dict, session_key, label_text, max_selections=3):
+    st.write(f"**{label_text}** (maksimal {max_selections} pilihan)")
+
     options = list(items_dict.keys())
-    current_value = st.session_state.get(session_key, '')
-    index = options.index(current_value) if current_value in options else 0
-    selected = st.radio(label_text, options, index=index, format_func=lambda x: x.title())
+    cols = st.columns(2)
+
+    selected = st.session_state.get(session_key, [])
+    if not isinstance(selected, list):
+        selected = []
+
+    checked_count = sum(1 for _ in selected)
+
+    for i, option in enumerate(options):
+        widget_key = f"{session_key}_{option}"
+        is_checked = option in selected
+        disabled = (checked_count >= max_selections) and (not is_checked)
+
+        with cols[i % 2]:
+            if st.checkbox(
+                option.title(),
+                value=is_checked,
+                key=widget_key,
+                disabled=disabled,
+            ):
+                if option not in selected:
+                    selected.append(option)
+            else:
+                if option in selected:
+                    selected.remove(option)
+
     st.session_state[session_key] = selected
     return selected
 
+def create_radio_by_category(items_dict, session_key, label_text):
+    st.write(f"**{label_text}**")
+
+    options = list(items_dict.keys())
+    cols = st.columns(2)
+
+    current_value = st.session_state.get(session_key, "")
+
+    for i, option in enumerate(options):
+        with cols[i % 2]:
+
+            checked = st.checkbox(
+                option.title(),
+                value=(current_value == option),
+                key=f"{session_key}_{option}")
+
+            if checked and current_value != option:
+                st.session_state[session_key] = option
+                st.rerun()
+
 def create_minat_accordion(items_dict, session_key, label_text):
     st.write(f"**{label_text}**")
+
     categories = []
     cat_items = {}
+
     for opt, cat in items_dict.items():
         if cat not in cat_items:
             cat_items[cat] = []
             categories.append(cat)
+
         cat_items[cat].append(opt)
 
     current_value = st.session_state.get(session_key, "")
 
     for cat in categories:
+
         expanded = current_value in cat_items[cat]
+
         with st.expander(cat.upper(), expanded=expanded):
+
             cols = st.columns(2)
+
             for i, opt in enumerate(cat_items[cat]):
-                col = cols[i % 2]
-                label = opt.title()
-                if current_value == opt:
-                    label = f"{label} ✅"
-                if col.button(label, key=f"{session_key}_{cat}_{opt}"):
-                    st.session_state[session_key] = opt
+
+                with cols[i % 2]:
+
+                    widget_key = f"{session_key}_{opt}"
+                    is_selected = (current_value == opt)
+
+                    checked = st.checkbox(
+                        opt.title(),
+                        value=is_selected,
+                        key=widget_key,
+                        disabled=is_selected,
+                    )
+
+                    # Jika user klik opsi non-aktif, lakukan switch ke opsi baru.
+                    if checked and current_value != opt:
+                        st.session_state[session_key] = opt
+                        st.rerun()
+
     return st.session_state.get(session_key, "")
 
+
 def create_checkbox_group(items_dict, session_key, label_text):
+    """Multi-select maksimal 2 pilihan, disimpan ke st.session_state[session_key] sebagai list pilihan."""
     st.write(f"**{label_text}** (Maksimal 2 pilihan)")
+
     options = list(items_dict.keys())
-    checked_count = sum(1 for option in options if st.session_state.get(f"{session_key}_{option}", option in st.session_state.get(session_key, [])))
-    cols = st.columns(2) 
+    selected = st.session_state.get(session_key, [])
+    if not isinstance(selected, list):
+        selected = []
+
+    checked_count = len(selected)
+    cols = st.columns(2)
+
     for i, option in enumerate(options):
         widget_key = f"{session_key}_{option}"
-        is_checked = st.session_state.get(widget_key, option in st.session_state.get(session_key, []))
-        disabled = checked_count >= 2 and not is_checked
+        is_checked = option in selected
+        disabled = (checked_count >= 2) and (not is_checked)
+
         with cols[i % 2]:
-            st.checkbox(option.title(), value=is_checked, key=widget_key, disabled=disabled)
+            if st.checkbox(
+                option.title(),
+                value=is_checked,
+                key=widget_key,
+                disabled=disabled,
+            ):
+                if option not in selected:
+                    selected.append(option)
+            else:
+                if option in selected:
+                    selected.remove(option)
+
+    st.session_state[session_key] = selected
+    return selected
+
+
 
 def get_selected_checkboxes(items_dict, session_key):
     selected = []
@@ -56,8 +142,66 @@ def get_selected_checkboxes(items_dict, session_key):
             selected.append(option)
     return selected
 
+def create_support_accordion(items_dict, session_key, label_text):
+    st.write(f"**{label_text}**")
+
+    # kelompokkan option berdasarkan bidang
+    categories = []
+    cat_items = {}
+
+    for option, bidang_list in items_dict.items():
+
+        if not isinstance(bidang_list, list):
+            bidang_list = [bidang_list]
+
+        for bidang in bidang_list:
+
+            if bidang not in cat_items:
+                cat_items[bidang] = []
+                categories.append(bidang)
+
+            cat_items[bidang].append(option)
+
+    selected = st.session_state.get(session_key, [])
+
+    if not isinstance(selected, list):
+        selected = []
+
+    # tampilkan seperti Step 1
+    for bidang in categories:
+
+        expanded = any(opt in selected for opt in cat_items[bidang])
+
+        with st.expander(bidang.upper(), expanded=expanded):
+
+            cols = st.columns(2)
+
+            for i, option in enumerate(cat_items[bidang]):
+
+                with cols[i % 2]:
+
+                    checked = option in selected
+
+                    checkbox_key = f"{session_key}_{bidang}_{option}"
+                    if st.checkbox(
+                        option.title(),
+                        value=checked,
+                        key=checkbox_key
+                    ):
+                        if option not in selected:
+                            selected.append(option)
+
+                    else:
+                        if option in selected:
+                            selected.remove(option)
+
+    st.session_state[session_key] = selected
+    return selected
+
+
 def get_jurusan_populer_text(bidang):
     if bidang == "Komputer dan Teknologi": return "Teknik Informatika<br>Sistem Informasi<br>Ilmu Komputer<br>Teknologi Informasi<br>Sistem Komputer"
+
     elif bidang == "Teknik": return "Teknik Industri<br>Teknik Sipil<br>Teknik Mesin<br>Teknik Elektro<br>Teknik Kimia"
     elif bidang == "Kesehatan": return "Kedokteran<br>Keperawatan<br>Farmasi<br>Kesehatan Masyarakat<br>Gizi"
     elif bidang == "Ekonomi dan Bisnis": return "Akuntansi<br>Manajemen<br>Bisnis Digital<br>Kewirausahaan<br>Ekonomi Pembangunan<br>"
@@ -68,9 +212,7 @@ def get_jurusan_populer_text(bidang):
     elif bidang == "Sains dan MIPA": return "Matematika<br>Statistika<br>Fisika<br>Kimia<br>Biologi"
     else: return "Agribisnis<br>Agroteknologi<br>Teknologi Pangan<br>Peternakan<br>Kehutanan"
 
-# ==========================================
-# KAMUS DATA (DICTIONARY)
-# ==========================================
+# === KAMUS DATA (DICTIONARY) === #
 minat_dict = {
     "coding": "Komputer dan Teknologi", "programming": "Komputer dan Teknologi", "artificial intelligence": "Komputer dan Teknologi", "machine learning": "Komputer dan Teknologi", "web development": "Komputer dan Teknologi", "software": "Komputer dan Teknologi", "cyber security": "Komputer dan Teknologi", "data science": "Komputer dan Teknologi", "game development": "Komputer dan Teknologi", "technology": "Komputer dan Teknologi", "information technology": "Komputer dan Teknologi", "it": "Komputer dan Teknologi", "cloud computing": "Komputer dan Teknologi", "data analytics": "Komputer dan Teknologi", "data scientist": "Komputer dan Teknologi", "web designing": "Komputer dan Teknologi", "blockchain": "Komputer dan Teknologi", "software developer": "Komputer dan Teknologi", "software engineer": "Komputer dan Teknologi",
     "robotics": "Teknik", "mechanics": "Teknik", "electronics": "Teknik", "automobile": "Teknik", "construction": "Teknik", "engineering": "Teknik", "oil and gas": "Teknik", "project management": "Teknik", "construction manegement": "Teknik", "infrastructure": "Teknik",

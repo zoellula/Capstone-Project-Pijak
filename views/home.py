@@ -22,7 +22,7 @@ def show_home():
     st.html("""
         <style>
         .stAppViewMain {
-            background-color: #EEF2FF !important;
+            background-color: #EFF5FF!important;
         }
         
         .stButton>button {
@@ -69,8 +69,8 @@ def show_home():
             background-color: white;
             padding: 24px;
             border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
-            height: 100%;
+            box-shadow: 0 10px 30px rgba(15,23,42,.05);
+            height: 200px;
             min-height: 220px;
             border: 1px solid #F1F5F9;
             text-align: left;
@@ -99,15 +99,34 @@ def show_home():
             border: 1px solid #F1F5F9;
         }
         .section-title {
-            font-size: 18px;
+            font-size: 25px;
             font-weight: 700;
             color: #0F172A;
-            margin-bottom: 36px;
+            background-color: white;
+            margin-bottom: 2px;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
         }
-        
+            
         .step-item {
+            background-color: white;
+            border: 1px solid #F1F5F9;
+            border-radius: 28px;
+            padding: 30px 30px;
             text-align: center;
+            margin-top: 50px;
+            margin-bottom: 30px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            box-shadow: 0 10px 30px rgba(15,23,42,.05);
+            transition: all 0.3s ease;
+        }
+        .step-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(124,58,237,0.08);
         }
         .step-number {
             background-color: #F5F3FF;
