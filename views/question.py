@@ -1,8 +1,10 @@
 import streamlit as st
 from views.kamus import (minat_dict, hard_skill_dict, soft_skill_dict, mapel_dict,
-                         jurusan_dict, ekskul_dict, personality_dict, hobi_dict,
-                         create_minat_accordion, create_checkbox_group,
-                         create_checkbox_group_max3, get_selected_checkboxes, create_support_accordion )
+                         jurusan_dict, ekskul_dict, personality_dict, hobi_dict, terjemahan_minat,
+                         terjemahan_hard, terjemahan_mapel, detail_jurusan,
+                         create_minat_accordion, create_checkbox_group, get_selected_checkboxes,
+                         create_support_accordion, create_radio_group,
+                         create_single_checkbox_group)
 import streamlit.components.v1 as components
 
 def scroll_to_top():
@@ -155,7 +157,39 @@ def show_question():
     }}
 
     /* === RADIO PILIHAN FITUR PENDUKUNG ==== */
-                
+    div[data-testid="stRadio"] input[type="radio"]{{
+        display:none;
+    }}
+
+    div[data-testid="stRadio"] label{{
+        background:#F3F0FF !important;
+        border:1px solid #DDD6FE !important;
+        min-width:330px !important;
+        min-height:100% !important;
+        padding:0.75rem 1.25rem !important;
+        display:flex !important;
+        align-items:center !important;
+        white-space:normal !important;
+        word-break:break-word !important;
+        box-sizing:border-box !important;
+        border-radius:10px !important;
+        transition:0.3s;
+        color:#8B5CF6 !important;
+        font-weight:600 !important;
+        margin-bottom:0.5rem !important;
+    }}
+
+    div[data-testid="stRadio"] label:hover{{
+        background:#E9D5FF !important;
+    }}
+
+    div[data-testid="stRadio"] label:has(input:checked){{
+        background:#8B5CF6 !important;
+        border-color:#8B5CF6 !important;
+        color:white !important;
+        font-weight:700 !important;
+    }}
+
     .question-header{{
         position:sticky;
         top:0;
@@ -248,19 +282,19 @@ def show_question():
     if st.session_state.current_step == 1:
         render_step_header(1,  "Bidang apa yang paling membuatmu tertarik dan antusias?")
 
-        create_minat_accordion(minat_dict, 'minat', "Pilih minat terbesarmu:")
+        create_minat_accordion(minat_dict, 'minat', "Pilih 1 minat terbesarmu!", terjemahan_minat)
 
         st.markdown("---")
 
         col1, col2 = st.columns([1,1], gap="large")
 
-        with col1:
-            back_btn = st.button(
-                "Kembali",
-                key="back_1",
-                use_container_width=True,
-                type="secondary"
-            )
+        #with col1:
+        #    back_btn = st.button(
+        #        "Kembali",
+        #        key="back_1",
+        #        use_container_width=True,
+        #        type="secondary"
+        #    )
 
         with col2:
             next_btn = st.button(
@@ -270,26 +304,39 @@ def show_question():
                 type="primary"
             )
 
-        if back_btn:
-            st.session_state.page = "home"
-            st.rerun()
+        #if back_btn:
+        #    st.session_state.page = "home"
+        #    st.rerun()
 
         if next_btn:
-            minat_val = st.session_state.get("minat", "")
-            if minat_val == "":
-                st.error("⚠️ Pilih salah satu minat sebelum melanjutkan!")
+            minat_val = get_selected_checkboxes(
+                minat_dict,
+                'minat'
+            )
+            if len(minat_val) == 0:
+                st.error("⚠️ Pilih minimal 1 minat!")
+
+            elif len(minat_val) > 1:
+                st.error("⚠️ Maksimal 1 minat yang dapat dipilih!")
+
             else:
+                st.session_state['minat'] = minat_val[0] if isinstance(minat_val, list) else minat_val
                 st.session_state.current_step = 2
                 st.rerun()
 
     # ==================== TAHAP 2: HARD SKILL ====================
     elif st.session_state.current_step == 2:
         render_step_header(2, "Keahlian teknis (Hard Skill) apa yang paling kamu kuasai saat ini?")
-
+        
+        #Hasil di halaman sebelumnya untuk debug
+        #with st.expander("📊 Debug - Jawaban Sebelumnya"):
+        #    st.write(f"**Minat yang dipilih:** {st.session_state.minat}")
+        
         create_checkbox_group(
             hard_skill_dict,
             'hard_skill',
-            "Pilih keahlian teknismu"
+            "Pilih keahlian teknismu (Maksimal 2 pilihan)", 
+            translation_dict=terjemahan_hard
         )
 
         st.markdown("---")
@@ -337,10 +384,15 @@ def show_question():
     elif st.session_state.current_step == 3:
         render_step_header(3, "Keterampilan personal (Soft Skill) apa yang paling menonjol dari dirimu?")
 
+        #Hasil di halaman sebelumnya untuk debug
+        with st.expander("📊 Debug - Jawaban Sebelumnya"):
+            st.write(f"**Minat yang dipilih:** {st.session_state.minat}")
+            st.write(f"**Keahlian teknis yang dipilih:** {st.session_state.hard_skill}")
+
         create_checkbox_group(
             soft_skill_dict,
             'soft_skill',
-            "Pilih keterampilan personalmu"
+            "Pilih keterampilan personalmu (Maksimal 2 pilihan)"
         )
 
         st.markdown("---")
@@ -386,13 +438,19 @@ def show_question():
 
     # ==================== TAHAP 4: MAPEL ====================
     elif st.session_state.current_step == 4:
-        render_step_header(4, "Mata pelajaran apa yang paling kamu sukai atau dapatkan nilai tertinggi?")
+        render_step_header(4, "Mata pelajaran apa yang paling kamu sukai atau selalu mendapat nilai tertinggi?")
 
-        create_checkbox_group_max3(
+        #Hasil di halaman sebelumnya untuk debug
+        #with st.expander("📊 Debug - Nilai Sebelumnya"):
+        #    st.write(f"**Minat yang dipilih:** {st.session_state.minat}")
+        #   st.write(f"**Keahlian teknis yang dipilih:** {st.session_state.hard_skill}")
+        #    st.write(f"**Keterampilan personal yang dipilih:** {st.session_state.soft_skill}")
+            
+        create_checkbox_group(
             mapel_dict,
             'mapel',
-            "Pilih mata pelajaran favoritmu:",
-            max_selections=3
+            "Pilih mata pelajaran favoritmu! (Maksimal 3 pilihan)", 
+            translation_dict=terjemahan_mapel
         )
 
         st.markdown("---")
@@ -420,8 +478,21 @@ def show_question():
             st.rerun()
 
         if next_btn:
-            st.session_state.current_step = 5
-            st.rerun()
+            selected_mapel = get_selected_checkboxes(
+                mapel_dict,
+                'mapel'
+            )
+
+            if len(selected_mapel) == 0:
+                st.error("⚠️ Pilih minimal 1 pelajaran!")
+
+            elif len(selected_mapel) > 3:
+                st.error("⚠️ Maksimal 3 pelajaran yang dapat dipilih!")
+
+            else:
+                st.session_state['mapel'] = selected_mapel
+                st.session_state.current_step = 5
+                st.rerun()
 
     # ==================== TAHAP 5: PENDUKUNG (RULE-BASED) ====================
     elif st.session_state.current_step == 5:
@@ -430,40 +501,40 @@ def show_question():
             "Lengkapi profil keseharianmu!"
         )
 
+        #Hasil di halaman sebelumnya untuk debug
+        #with st.expander("📊 Debug - Jawaban Sebelumnya"):
+        #    st.write(f"**Minat yang dipilih:** {st.session_state.minat}")
+        #    st.write(f"**Keahlian teknis yang dipilih:** {st.session_state.hard_skill}")
+        #    st.write(f"**Keterampilan personal yang dipilih:** {st.session_state.soft_skill}")
+        #    st.write(f"**Pelajaran favorit yang dipilih:** {st.session_state.mapel}")
+
         # ================= JURUSAN =================
         with st.expander("**Jurusan SMA/SMK**", expanded=True):
-            create_checkbox_group_max3(
+            create_single_checkbox_group(
                 jurusan_dict,
                 "jurusan_sekolah",
-                "Pilih jurusan kamu:",
-                max_selections=1
+                detail_jurusan=detail_jurusan
             )
 
         # ================= KEPRIBADIAN =================
         with st.expander("**Kepribadian**", expanded=False):
-            create_checkbox_group_max3(
+            create_single_checkbox_group(
                 personality_dict,
-                "personality",
-                "Pilih kepribadian kamu:",
-                max_selections=1
+                "personality"
             )
 
         # ================= HOBI =================
         with st.expander("**Hobi**", expanded=False):
-            create_checkbox_group_max3(
+            create_single_checkbox_group(
                 hobi_dict,
-                "hobi",
-                "Pilih hobi kamu:",
-                max_selections=3
+                "hobi"
             )
 
         # ================= EKSKUL =================
         with st.expander("**Ekstrakurikuler**", expanded=False):
-            create_checkbox_group_max3(
+            create_single_checkbox_group(
                 ekskul_dict,
-                "ekskul",
-                "Pilih ekskul kamu:",
-                max_selections=3
+                "ekskul"
             )
 
         st.markdown("---")
@@ -491,5 +562,20 @@ def show_question():
             st.rerun()
 
         if result_btn:
-            st.session_state.page = "result"
-            st.rerun()
+            jurusan = st.session_state.get("jurusan_sekolah", [])
+            personality = st.session_state.get("personality", [])
+            hobi = st.session_state.get("hobi", [])
+            ekskul = st.session_state.get("ekskul", [])
+
+            # 1. Cek apakah ada kategori yang sama sekali belum dipilih (list kosong)
+            if not jurusan or not personality or not hobi or not ekskul:
+                st.warning("⚠️ Eits, tunggu dulu! Pastikan kamu sudah memilih Jurusan, Kepribadian, Hobi, dan Ekstrakurikuler ya.")
+            
+            # 2. Cek apakah ada kategori yang dipilih lebih dari satu (isi list > 1)
+            elif len(jurusan) > 1 or len(personality) > 1 or len(hobi) > 1 or len(ekskul) > 1:
+                st.warning("⚠️ Wah, pilihannya kebanyakan! Tolong pilih maksimal SATU saja untuk setiap kategori ya.")
+            
+            # 3. Jika aman (tepat 1 pilihan di setiap kategori)
+            else:
+                st.session_state.page = "result"
+                st.rerun()

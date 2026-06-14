@@ -92,8 +92,8 @@ def show_home():
         
         .how-it-works-section {
             background-color: white;
-            border-radius: 20px;
-            padding: 40px 30px;
+            border-radius: 10px;
+            padding: 10px 30px;
             margin-top: 40px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
             border: 1px solid #F1F5F9;
@@ -208,15 +208,18 @@ def show_home():
             <div class='icon-circle'>
                 <img src="data:image/png;base64,{img_topi}" style="width: 50px; height: 50px; object-fit: contain;">
             </div>
-            <div class='main-title'>Career & Education Pathway</div>
-            <div class='sub-title'>Discover your ideal bachelor's degree and career path through a personalized assessment of your hobis, interest, and goals</div>
+            <div class='main-title'>Pijak Karier:<br>Kompas Jurusan Masa Depan</div>
+            <div class='sub-title'>Temukan jurusan dan jalur karier ideal-mu melalui penilaian personalisasi dari hobi, minat, dan tujuan masa depanmu.</div>
+            <!--<div class='main-title'>Career & Education Pathway</div>-->
+            <!--<div class='sub-title'>Discover your ideal bachelor's degree and career path through a personalized assessment of your hobbies, interest, and goals</div>-->
         </div>
     """, unsafe_allow_html=True)
     
    # Render Tombol Navigasi
     _, col_btn, _ = st.columns([1.2, 1.6, 1.2])
     with col_btn:
-        if st.button("Start Your Journey", use_container_width=True):
+        #if st.button("Start Your Journey", use_container_width=True):
+        if st.button("Mulai perjalanan", use_container_width=True):
             # 1. Ubah rute halaman ke 'question'
             st.session_state.page = 'question'
             
@@ -233,8 +236,8 @@ def show_home():
     with col1:
         st.markdown(f"""
             <div class='feature-card'>
-                <div class='feature-icon'><img src="data:image/png;base64,{img_analisis}" style="width: 36px; height: 36px;"></div>
-                <div class='feature-title'>Analisis Personal</div>
+                <div class='feature-icon'><center><img src="data:image/png;base64,{img_analisis}" style="width: 36px; height: 36px;"></div>
+                <div class='feature-title'><center>Analisis Personal</div>
                 <div class='feature-desc'>Penilaian cerdas yang menganalisis hobi, bakat, dan preferensimu untuk memberikan saran yang tepat.</div>
             </div>
         """, unsafe_allow_html=True)
@@ -242,17 +245,17 @@ def show_home():
     with col2:
         st.markdown(f"""
             <div class='feature-card'>
-                <div class='feature-icon'><img src="data:image/png;base64,{img_rekomendasi}" style="width: 36px; height: 36px;"></div>
-                <div class='feature-title'>Rekomendasi Pendidikan</div>
-                <div class='feature-desc'>Temukan jurusan dan program studi yang paling sesuai dengan kemampuan dan minat akademismu.</div>
+                <div class='feature-icon'><center><img src="data:image/png;base64,{img_rekomendasi}" style="width: 36px; height: 36px;"></div>
+                <div class='feature-title'><center>Rekomendasi Studi</div>
+                <div class='feature-desc'>Temukan program studi yang paling sesuai dengan kemampuan dan minat akademismu.</div>
             </div>
         """, unsafe_allow_html=True)
         
     with col3:
         st.markdown(f"""
             <div class='feature-card'>
-                <div class='feature-icon'><img src="data:image/png;base64,{img_karier}" style="width: 36px; height: 36px;"></div>
-                <div class='feature-title'>Jalur Karier</div>
+                <div class='feature-icon'><center><img src="data:image/png;base64,{img_karier}" style="width: 36px; height: 36px;"></div>
+                <div class='feature-title'><center>Jalur Karier</div>
                 <div class='feature-desc'>Jelajahi berbagai pilihan karier yang selaras dengan jurusan pilihanmu dan cita-cita jangka panjang.</div>
             </div>
         """, unsafe_allow_html=True)
@@ -266,15 +269,15 @@ def show_home():
             <div class='step-item'>
                 <div class='step-number'>1</div>
                 <div class='step-label'>Jawab Pertanyaan</div>
-                <div class='step-desc'>Menjawab pertanyaan seputar hobi, bakat, dan minatmu</div>
+                <div class='step-desc'>Menjawab pertanyaan seputar minat dan keahlian.</div>
             </div>
         """, unsafe_allow_html=True)
     with step_col2:
         st.markdown("""
             <div class='step-item'>
                 <div class='step-number'>2</div>
-                <div class='step-label'>Isi Preferensi</div>
-                <div class='step-desc'>Sampaikan gaya belajar dan cara bekerja favoritmu</div>
+                <div class='step-label'>Pilih Preferensi</div>
+                <div class='step-desc'>Memilih kepribadian, hobi dan kegiatan penunjang lain.</div>
             </div>
         """, unsafe_allow_html=True)
     with step_col3:
@@ -282,7 +285,7 @@ def show_home():
             <div class='step-item'>
                 <div class='step-number'>3</div>
                 <div class='step-label'>Dapatkan Analisis</div>
-                <div class='step-desc'>Algoritma kami memproses profilmu</div>
+                <div class='step-desc'>Algoritma kami memproses profilmu.</div>
             </div>
         """, unsafe_allow_html=True)
     with step_col4:
@@ -290,9 +293,9 @@ def show_home():
             <div class='step-item'>
                 <div class='step-number'>4</div>
                 <div class='step-label'>Lihat Hasil</div>
-                <div class='step-desc'>Terima rekomendasi yang dipersonalisasi untukmu</div>
+                <div class='step-desc'>Terima rekomendasi yang dipersonalisasi untukmu.</div>
             </div>
         """, unsafe_allow_html=True)
         
     st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<div class='footer-note'>Hanya membutuhkan waktu 5 menit, Gratis, Tidak perlu registrasi</div>", unsafe_allow_html=True)
+    st.markdown("<div class='footer-note'>Hanya butuh waktu 5 menit. Gratis. Tidak perlu registrasi.</div>", unsafe_allow_html=True)
